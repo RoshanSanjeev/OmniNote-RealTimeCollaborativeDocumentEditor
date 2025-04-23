@@ -1,106 +1,120 @@
+// EditorApp.js
 import React, { useEffect, useRef, useState } from 'react';
 import './App.css';
 
-const socket = new WebSocket('ws://localhost:3001/ws');
-
 function EditorApp({ username }) {
   const editorRef = useRef(null);
+  const socketRef = useRef(null);
   const [content, setContent] = useState('');
   const [users, setUsers] = useState({});
-  const [history, setHistory] = useState([]);
   const [userId, setUserId] = useState('');
   const [userColor, setUserColor] = useState('');
+  const [cursorMap, setCursorMap] = useState({});
+  const [history, setHistory] = useState([]);
   const [notification, setNotification] = useState('');
 
   useEffect(() => {
+    const socket = new WebSocket('ws://localhost:3001/ws');
+    socketRef.current = socket;
+
     socket.onopen = () => {
-      console.log('WebSocket connected');
       socket.send(JSON.stringify({ type: 'register_name', name: username }));
     };
 
     socket.onmessage = (event) => {
       const msg = JSON.parse(event.data);
-      console.log('[RECEIVED]', msg);  // ✅ Add this line
+      console.log('[RECEIVED]', msg);
 
-      if (msg.type === 'init') {
-        setUserId(msg.userId);
-        setUserColor(msg.userColor);
-        setContent(msg.content);
-        setUsers(msg.users);
-        setHistory(msg.versionHistory);
-        if (editorRef.current) editorRef.current.innerHTML = msg.content;
-      }
+      switch (msg.type) {
+        case 'init':
+          setUserId(msg.userId);
+          setUserColor(msg.userColor);
+          setContent(msg.content);
+          setUsers(msg.users);
+          setHistory(msg.versionHistory);
+          if (editorRef.current) editorRef.current.innerHTML = msg.content;
+          break;
 
-      if (msg.type === 'content_update') {
-        setContent(msg.content);
-        if (editorRef.current && editorRef.current.innerHTML !== msg.content) {
-          editorRef.current.innerHTML = msg.content;
-        }
-      }
+        case 'user_joined':
+          setUsers(prev => ({ ...prev, [msg.userId]: { name: msg.name, color: msg.color } }));
+          setNotification(`${msg.name} joined`);
+          break;
 
-      if (msg.type === 'user_joined') {
-        setUsers(prev => ({
-          ...prev,
-          [msg.userId]: {
-            color: msg.color,
-            name: msg.name || "Unnamed"
-          }
-        }));
-        setNotification(`🟢 ${msg.name || 'User'} joined`);
-        setTimeout(() => setNotification(''), 3000);
-      }
-      
+        case 'user_left':
+          setUsers(prev => {
+            const updated = { ...prev };
+            delete updated[msg.userId];
+            return updated;
+          });
+          setNotification(`A user left`);
+          break;
 
-      if (msg.type === 'user_left') {
-        setUsers(prev => {
-          const updated = { ...prev };
-          delete updated[msg.userId];
-          return updated;
-        });
-        setNotification(`🔴 User left`);
-        setTimeout(() => setNotification(''), 3000);
-      }
-      
+        case 'content_update':
+          setContent(msg.content);
+          if (editorRef.current) editorRef.current.innerHTML = msg.content;
+          break;
 
-      if (msg.type === 'cursor_update' && msg.userId !== userId) {
-        console.log(`Cursor from ${msg.userId}: offset ${msg.cursor.offset}`);
+        case 'history_update':
+          setHistory(msg.versionHistory);
+          break;
+
+        case 'cursor_update':
+          setCursorMap(prev => ({
+            ...prev,
+            [msg.userId]: {
+              offset: msg.cursor.offset,
+              color: msg.cursor.color,
+              name: msg.cursor.name
+            }
+          }));
+          break;
+
+        default:
+          console.warn('Unknown message type:', msg);
       }
     };
+
+    return () => socket.close();
   }, [username]);
 
   const handleInput = () => {
-    const updatedContent = editorRef.current.innerHTML;
-    socket.send(JSON.stringify({ type: 'content_change', content: updatedContent }));
+    const newContent = editorRef.current.innerHTML;
+    setContent(newContent);
+    socketRef.current?.send(JSON.stringify({ type: 'content_change', content: newContent }));
 
+    sendCursorUpdate();
+  };
+
+  const sendCursorUpdate = () => {
     const selection = window.getSelection();
-    const range = selection.getRangeAt(0);
-    const offset = range.startOffset;
-
-    socket.send(JSON.stringify({
+    const offset = selection?.anchorOffset || 0;
+    socketRef.current?.send(JSON.stringify({
       type: 'cursor_update',
       cursor: {
         offset,
-        color: userColor
+        color: userColor,
+        name: username
       }
     }));
   };
 
   const formatText = (command, value = null) => {
     document.execCommand(command, false, value);
+    sendCursorUpdate();
   };
 
-  const revertToVersion = (content) => {
-    editorRef.current.innerHTML = content;
-    socket.send(JSON.stringify({ type: 'content_change', content }));
+  const revertToVersion = (html) => {
+    if (editorRef.current) {
+      editorRef.current.innerHTML = html;
+      socketRef.current?.send(JSON.stringify({ type: 'content_change', content: html }));
+    }
   };
 
   return (
     <div className="app-container">
       <header className="app-header">
         <h1>📄 OmniNote</h1>
-        <div className="status-bar">
-          <span className="status-text">Connected Users: {Object.keys(users).length}</span>
-        </div>
+        <div className="status-bar">Connected Users: {Object.keys(users).length}</div>
       </header>
 
       {notification && <div className="toast">{notification}</div>}
@@ -116,21 +130,21 @@ function EditorApp({ username }) {
 
       <main className="main-content">
         <section
-          className="editor"
           ref={editorRef}
+          className="editor"
           contentEditable
           suppressContentEditableWarning
           onInput={handleInput}
           dangerouslySetInnerHTML={{ __html: content }}
-        ></section>
+        />
 
         <aside className="sidebar">
           <div className="users-box">
             <h3>👥 Users</h3>
             <ul>
-              {Object.entries(users).map(([uid, val]) => (
-                <li key={uid} style={{ color: val.color }}>
-                  {uid === userId ? `${username} (You)` : val.name || `User ${uid.substring(0, 5)}`}
+              {Object.entries(users).map(([id, val]) => (
+                <li key={id} style={{ color: val.color }}>
+                  {id === userId ? `${val.name} (You)` : val.name}
                 </li>
               ))}
             </ul>
@@ -139,10 +153,10 @@ function EditorApp({ username }) {
           <div className="history-box">
             <h3>📜 History</h3>
             <ul>
-              {history.map((entry, idx) => (
-                <li key={idx}>
-                  {entry.timestamp?.slice(11, 16)} - {entry.userId?.substring(0, 5)} edited
-                  <button onClick={() => revertToVersion(entry.content)}>⏪</button>
+              {history.map((h, i) => (
+                <li key={i}>
+                  {h.timestamp?.slice(11, 16)} - {h.userId?.slice(0, 5)} edited
+                  <button onClick={() => revertToVersion(h.content)}>⏪</button>
                 </li>
               ))}
             </ul>
