@@ -1,0 +1,32 @@
+.container {
+  font-family: sans-serif;
+  padding: 20px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toolbar {
+  margin: 10px 0;
+}
+
+.editor-area {
+  display: flex;
+  gap: 20px;
+}
+
+.editor {
+  flex: 3;
+  border: 1px solid #ccc;
+  min-height: 300px;
+  padding: 10px;
+}
+
+.sidebar {
+  flex: 1;
+  border-left: 1px solid #ddd;
+  padding-left: 10px;
+}
