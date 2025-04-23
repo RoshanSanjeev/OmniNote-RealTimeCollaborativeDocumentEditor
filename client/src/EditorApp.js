@@ -20,6 +20,7 @@ function EditorApp({ username }) {
 
     socket.onmessage = (event) => {
       const msg = JSON.parse(event.data);
+      console.log('[RECEIVED]', msg);  // ✅ Add this line
 
       if (msg.type === 'init') {
         setUserId(msg.userId);
@@ -38,10 +39,17 @@ function EditorApp({ username }) {
       }
 
       if (msg.type === 'user_joined') {
-        setUsers(prev => ({ ...prev, [msg.userId]: { color: msg.color, name: msg.name || "Unnamed" } }));
+        setUsers(prev => ({
+          ...prev,
+          [msg.userId]: {
+            color: msg.color,
+            name: msg.name || "Unnamed"
+          }
+        }));
         setNotification(`🟢 ${msg.name || 'User'} joined`);
         setTimeout(() => setNotification(''), 3000);
       }
+      
 
       if (msg.type === 'user_left') {
         setUsers(prev => {
@@ -49,9 +57,10 @@ function EditorApp({ username }) {
           delete updated[msg.userId];
           return updated;
         });
-        setNotification(`🔴 User ${msg.userId.slice(0, 5)} left`);
+        setNotification(`🔴 User left`);
         setTimeout(() => setNotification(''), 3000);
       }
+      
 
       if (msg.type === 'cursor_update' && msg.userId !== userId) {
         console.log(`Cursor from ${msg.userId}: offset ${msg.cursor.offset}`);

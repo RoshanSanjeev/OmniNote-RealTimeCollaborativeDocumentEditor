@@ -11,7 +11,9 @@ function App() {
     setEntered(true);
   };
 
-  return entered ? <EditorApp username={username} /> : <LandingPage onEnter={handleEnter} />;
+  return entered
+    ? <EditorApp username={username} />
+    : <LandingPage onEnter={handleEnter} />;
 }
 
 export default App;
