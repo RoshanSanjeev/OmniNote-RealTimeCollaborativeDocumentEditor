@@ -110,20 +110,35 @@ body {
   margin: 0;
 }
 
-.users-box li, .history-box li {
+.users-box li {
+  margin: 6px 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #222;
+}
+
+.users-box li[style] {
+  color: inherit; /* preserve assigned user color */
+}
+
+.history-box li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin: 6px 0;
   font-size: 0.95rem;
 }
 
 .history-box button {
   margin-left: 10px;
-  padding: 3px 6px;
-  font-size: 0.8rem;
-  background-color: var(--primary);
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  background-color: #0047ab;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 .history-box button:hover {

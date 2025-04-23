@@ -81,7 +81,6 @@ function EditorApp({ username }) {
     const newContent = editorRef.current.innerHTML;
     setContent(newContent);
     socketRef.current?.send(JSON.stringify({ type: 'content_change', content: newContent }));
-
     sendCursorUpdate();
   };
 
@@ -103,10 +102,11 @@ function EditorApp({ username }) {
     sendCursorUpdate();
   };
 
-  const revertToVersion = (html) => {
+  const revertToVersion = (versionContent) => {
     if (editorRef.current) {
-      editorRef.current.innerHTML = html;
-      socketRef.current?.send(JSON.stringify({ type: 'content_change', content: html }));
+      editorRef.current.innerHTML = versionContent;
+      setContent(versionContent);
+      socketRef.current?.send(JSON.stringify({ type: 'content_change', content: versionContent }));
     }
   };
 
@@ -142,9 +142,15 @@ function EditorApp({ username }) {
           <div className="users-box">
             <h3>👥 Users</h3>
             <ul>
-              {Object.entries(users).map(([id, val]) => (
-                <li key={id} style={{ color: val.color }}>
-                  {id === userId ? `${val.name} (You)` : val.name}
+              {Object.entries(users).map(([uid, val]) => (
+                <li
+                  key={uid}
+                  style={{
+                    color: val.color,
+                    filter: 'brightness(0.8) contrast(1.2)'
+                  }}
+                >
+                  {uid === userId ? `${val.name} (You)` : val.name}
                 </li>
               ))}
             </ul>
@@ -153,12 +159,15 @@ function EditorApp({ username }) {
           <div className="history-box">
             <h3>📜 History</h3>
             <ul>
-              {history.map((h, i) => (
-                <li key={i}>
-                  {h.timestamp?.slice(11, 16)} - {h.userId?.slice(0, 5)} edited
-                  <button onClick={() => revertToVersion(h.content)}>⏪</button>
-                </li>
-              ))}
+              {[...history].reverse().map((entry, idx) => {
+                const editorName = users[entry.userId]?.name || entry.userId.slice(0, 5);
+                return (
+                  <li key={idx}>
+                    {entry.timestamp?.slice(11, 16)} - {editorName} edited
+                    <button onClick={() => revertToVersion(entry.content)}>⏪</button>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </aside>
