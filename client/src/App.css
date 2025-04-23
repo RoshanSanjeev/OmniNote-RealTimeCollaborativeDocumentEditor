@@ -114,3 +114,34 @@ body {
   margin: 6px 0;
   font-size: 0.95rem;
 }
+
+.history-box button {
+  margin-left: 10px;
+  padding: 3px 6px;
+  font-size: 0.8rem;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.history-box button:hover {
+  background-color: #003a91;
+}
+
+.toast {
+  background-color: #0047ab;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  border-radius: 6px;
+  margin-top: 12px;
+  animation: fade 3s forwards;
+}
+
+@keyframes fade {
+  0% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; display: none; }
+}
