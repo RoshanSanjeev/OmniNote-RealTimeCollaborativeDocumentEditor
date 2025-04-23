@@ -56,48 +56,47 @@ function App() {
   };
 
   return (
-    <div className="container">
-      <header>
-        <h2>Document: Meeting Notes</h2>
-        <span>Connected Users ({Object.keys(users).length})</span>
+    <div className="app-container">
+      <header className="app-header">
+        <h1>📄 OmniNote</h1>
+        <div className="status-bar">
+          <span className="status-text">Connected Users: {Object.keys(users).length}</span>
+        </div>
       </header>
 
       <div className="toolbar">
-        <button onClick={() => formatText('bold')}>Bold</button>
-        <button onClick={() => formatText('italic')}>Italic</button>
-        <button onClick={() => formatText('underline')}>Underline</button>
+        <button onClick={() => formatText('bold')}><b>B</b></button>
+        <button onClick={() => formatText('italic')}><i>I</i></button>
+        <button onClick={() => formatText('underline')}><u>U</u></button>
       </div>
 
-      <div className="editor-area">
-        <div
-          className="editor"
-          ref={editorRef}
-          contentEditable
-          suppressContentEditableWarning
-          onInput={handleInput}
-          dangerouslySetInnerHTML={{ __html: content }}
-        ></div>
+      <main className="main-content">
+        <section className="editor" ref={editorRef} contentEditable suppressContentEditableWarning onInput={handleInput} dangerouslySetInnerHTML={{ __html: content }}></section>
 
-        <div className="sidebar">
-          <h4>Connected Users</h4>
-          <ul>
-            {Object.entries(users).map(([uid, val]) => (
-              <li key={uid} style={{ color: val.color }}>
-                {uid === userId ? 'You' : `User: ${uid.substring(0, 5)}`}
-              </li>
-            ))}
-          </ul>
+        <aside className="sidebar">
+          <div className="users-box">
+            <h3>👥 Users</h3>
+            <ul>
+              {Object.entries(users).map(([uid, val]) => (
+                <li key={uid} style={{ color: val.color }}>
+                  {uid === userId ? 'You' : `User ${uid.substring(0, 5)}`}
+                </li>
+              ))}
+            </ul>
+          </div>
 
-          <h4>Document History</h4>
-          <ul>
-            {history.map((entry, idx) => (
-              <li key={idx}>
-                {entry.timestamp?.slice(11, 16)} - {entry.userId?.substring(0, 5)} edited
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+          <div className="history-box">
+            <h3>📜 History</h3>
+            <ul>
+              {history.map((entry, idx) => (
+                <li key={idx}>
+                  {entry.timestamp?.slice(11, 16)} - {entry.userId?.substring(0, 5)} edited
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+      </main>
     </div>
   );
 }
