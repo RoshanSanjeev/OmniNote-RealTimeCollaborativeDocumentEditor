@@ -89,11 +89,5 @@ Type in the editor — both users will see real-time content and cursor updates
 🤝 Credits
 Built with 💻 Flask, ⚛️ React, and 🔌 WebSockets
 
-yaml
-Copy
-Edit
 
----
-
-Let me know if you want a one-liner for deploying to Heroku or Render too!
 
