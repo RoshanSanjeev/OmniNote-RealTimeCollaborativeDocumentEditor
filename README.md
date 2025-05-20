@@ -2,6 +2,7 @@
 # ✨ OmniNote: Real-Time Collaborative Document Editor
 
 Built by **Roshan Sanjeev**  
+Video Demo: https://youtu.be/E9SiT23UJe0
 This is a real-time collaborative document editor built from scratch using **React**, **Flask**, and **native WebSockets**. It allows multiple users to edit a shared document simultaneously with live syncing, rich text formatting, user tracking, and version history — all without any external rich text or socket libraries.
 
 ---
